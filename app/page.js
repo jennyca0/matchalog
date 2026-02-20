@@ -13,23 +13,34 @@ export default function Home() {
   }, []);     
   
 
-  return (
+return (
     <div>
-      <h1>MatchaLog</h1>
-      <h2>Discover</h2>
-      <h3>Find matcha products</h3>
-      {/* Display products in a grid */} 
-      <div className="container">
-        {data && data.products.map(product => (
-          <div key={product.id} className="card">
-            <img src={product.image_url} />
-            <div className="card-text">
-              <p>{product.name}</p>
-              <p>{product.brand}</p>
+      <nav className="topnav">
+        <div className="nav-wrapper">
+            <a href="#home" className="nav-logo">MatchaLog</a>
+          <ul>
+            <li><a href="#discover">Discover</a></li>
+            <li><a href="#stash">Stash</a></li>
+            <li><a href="#recipes">Recipes</a></li>
+            <li><a href="#profile">Profile</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <div className="page-wrapper">
+        <h2>Discover</h2>
+        <p className="page-description">Find matcha products</p>
+        <div className="container">
+          {data && data.products.map(product => (
+            <div key={product.id} className="card">
+              <img src={product.image_url} />
+              <div className="card-text">
+                <p>{product.name}</p>
+                <p>{product.brand}</p>
+              </div>
             </div>
-         {/*add averge rating and number of reviews */}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
