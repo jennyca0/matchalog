@@ -51,7 +51,7 @@ return (
 
         <div className="container">
           {data && data.products.map(product => (
-            <Link key={product.id} href={`/products/${product.id}`}>
+            <Link key={product.id} href={`/products/${product.id}`} className="Link">
             <div key={product.id} className="card">
               <div className="card-image-container">
                 <img src={product.image_url || '/image.svg'} alt={product.name} />

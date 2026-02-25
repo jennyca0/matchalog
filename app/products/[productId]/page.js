@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 export default function ProductPage ({ params }) {
@@ -31,26 +32,61 @@ export default function ProductPage ({ params }) {
 
     //render the product details
 
-    return (
-        <div>
-            <nav className="topnav">
-                <div className="nav-wrapper">
-                    <a href="#home" className="nav-logo">MatchaLog</a>
-                <ul>
-                    <li><a href="#discover">Discover</a></li>
-                    <li><a href="#stash">Stash</a></li>
-                    <li><a href="#recipes">Recipes</a></li>
-                    <li><a href="#profile">Profile</a></li>
-                </ul>
+return (
+    <div>
+        <nav className="topnav"> 
+            <div className="nav-wrapper">
+                <a href="#home" className="nav-logo">MatchaLog</a>
+            <ul>
+                <li><a href="#discover">Discover</a></li>
+                <li><a href="#stash">Stash</a></li>
+                <li><a href="#recipes">Recipes</a></li>
+                <li><a href="#profile">Profile</a></li>
+            </ul>
+            </div>
+        </nav>
+
+    <div className="page-wrapper">
+        <div className="product-container">
+        <div className="backlink">
+            <Link href="/">← Back to Catalog
+            </Link>
+        </div>
+            
+
+        <div className="product-page">
+            {/*product image*/}
+            <div key={product.id} className="card">
+              <div className="card-image-container">
+                <img src={product.image_url || '/image.svg'} alt={product.name} />
+              </div>
+            </div>
+            {/*product details*/}
+            <div className="product-details">
+                <div className="product-brand">{product.brand}</div>
+                <h1>{product.name}</h1>
+                <div className="product-tags"> 
+                    <span className="tag">{product.origin}</span>
+                    {/*<span className="tag">{product.grade}</span> */}
+                    <span className="tag">$ {product.price}</span>
                 </div>
-            </nav>
-        <div>
-            <h2>{product.name}</h2>
-            <p>{product.brand}</p>
-            <p>{product.description}</p> 
-            <p>{product.origin}</p>
-            <p>{product.weight_grams}</p>
+                <p className="product-description">{product.description}</p> 
+                <button className="add-to-stash">Add to Stash</button>
+            </div>
+        {/* Reviews Section
+        <div className="product-reviews">
+            <div className="reviews-header">
+            <h2 className="">Reviews ({productReviews.length})</h2>
+            {!showReviewForm && (
+                <button onClick={() => setShowReviewForm(true)} className="write-review-button">
+                Write Review
+                </button>
+            )}
+            </div>
+            </div>*/}
         </div>
         </div>
-    );
+    </div>
+    </div>
+);
 }
