@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { debounce } from 'lodash';
 import Link from 'next/link';
+import { user_id } from '@/lib/constants';
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -25,12 +26,12 @@ return (
     <div>
       <nav className="topnav">
         <div className="nav-wrapper">
-            <a href="#home" className="nav-logo">MatchaLog</a>
+            <Link href={`/`} className="nav-logo">MatchaLog</Link>
           <ul>
-            <li><a href="#discover">Discover</a></li>
-            <li><a href="#stash">Stash</a></li>
-            <li><a href="#recipes">Recipes</a></li>
-            <li><a href="#profile">Profile</a></li>
+            <li><Link href={`/`} className="nav-link">Discover</Link></li>
+            <li><Link href={`/stash/${user_id}`} className="nav-linkStash">Stash</Link></li>
+            <li><Link href={`/recipes`} className="nav-linkRecipes">Recipes</Link></li>
+            <li><Link href={`/profile/${user_id}`} className="nav-linkProfile">Profile</Link></li>
           </ul>
         </div>
       </nav>
@@ -51,7 +52,7 @@ return (
 
         <div className="container">
           {data && data.products.map(product => (
-            <Link key={product.id} href={`/products/${product.id}`} className="Link">
+            <Link key={product.id} href={`/products/${product.id}`} className="product-link">
             <div key={product.id} className="card">
               <div className="card-image-container">
                 <img src={product.image_url || '/image.svg'} alt={product.name} />
@@ -69,3 +70,5 @@ return (
     </div>
   );
 }
+
+{/*PAGINATION */} 
