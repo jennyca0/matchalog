@@ -9,6 +9,9 @@ export default function StashPage ({ params }) {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [activeFilter, setActiveFilter] = useState("All");
+    const filterOptions = ["All", "Unopened", "Opened", "Finished", "Wishlist", "Repurchased", "Did Not Finish"];
+
     useEffect(() => {
         const fetchUserStash = async () => {
             const response = await fetch(`/api/stash/${user_id}`);
@@ -52,7 +55,9 @@ export default function StashPage ({ params }) {
                 </div>    
                <div className="stash-container">
                     {loading ? (
-                        <p>Loading your stash...</p>
+                        <div className='loading-state'>
+                            <p>Loading your stash...</p>
+                        </div>
                     ) : userStash.length === 0 ? ( 
                         <div className="empty-stash">
                             <><p>No products in your stash yet! </p>
@@ -60,13 +65,48 @@ export default function StashPage ({ params }) {
                             <Link href="/"> <button className="discover-button">Discover Matcha</button></Link>
                         </div>
                     ) : (
-                        <div className="stash-list">
-                            {userStash.map((product) => ( 
-                                <div key={product.id} className="stash-item">
-                                    <p>{product.matcha_products.name}</p>
-                                </div>
-                            ))}
-                        </div>  
+                        <div className="stash-main">
+                            
+                            <div className="stash-products">
+                                {userStash
+                                .filter((product) => activeFilter === "All" || product.status === activeFilter.toLowerCase())
+                                .map((product) => ( 
+                                    <div key={product.id} className="stash-product-card">
+                                        <div className='stash-product-image'>
+                                            <img src={product.matcha_products?.image_url || '/image.svg'} alt={product.matcha_products?.name} />
+                                        </div>
+                                        <div className= "stash-product-details"> 
+                                            <div className='stash-product-info'>
+                                                <p className='stash-product-brand'>{product.matcha_products?.brand}</p>
+                                                <h3 className='stash-product-name'>{product.matcha_products?.name}</h3>
+                                                    <div className="stash-item-rating">
+                                                    <p className='stash-rating'>Your Rating</p>
+                                                    <div className="star-rating">
+                                                        {[1, 2, 3, 4, 5].map(star => (
+                                                            <span key={star} className={star <= (product.rating || 0) ? 'star filled' : 'star'}>★</span>
+                                                        ))}
+                                                    </div>
+                                            </div>
+
+                                            </div>
+                                            <div className="stash-product-actions">
+                                                <select className="stash-status-select" defaultValue={product.status}>
+                                                    <option value="unopened">Unopened</option>
+                                                    <option value="opened">Opened</option>
+                                                    <option value="finished">Finished</option>
+                                                    <option value="wishlist">Wishlist</option>
+                                                    <option value="repurchased">Repurchased</option>
+                                                    <option value="did not finish">Did Not Finish</option>
+                                                </select>
+                                                <button className="stash-delete-btn">Delete</button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>  
+
+                        </div>
                     )}
                 </div>
             </div>        
