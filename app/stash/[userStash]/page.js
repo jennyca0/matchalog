@@ -100,12 +100,10 @@ export default function StashPage ({ params }) {
                                                 </select>
                                                 <button className="stash-delete-btn">Delete</button>
                                             </div>
-
                                         </div>
                                     </div>
                                 ))}
                             </div>  
-
                         </div>
                     )}
                 </div>
