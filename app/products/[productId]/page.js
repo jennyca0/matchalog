@@ -41,8 +41,8 @@ export default function ProductPage ({ params }) {
     }, [product]);
 
     if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error loading product</div>;
-    if (!product) return <div>Product not found</div>;
+    if (error) return <div>Error loading product.</div>;
+    if (!product) return <div>Product not found.</div>;
 
 
     //render the product details
