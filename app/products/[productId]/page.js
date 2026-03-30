@@ -1,7 +1,7 @@
 "use client";
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { user_id } from '@/lib/constants';
+import Navbar from '@/components/navbar';
 
 export default function ProductPage ({ params }) {
     const [product, setProduct] = useState(null);
@@ -10,6 +10,9 @@ export default function ProductPage ({ params }) {
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [productReviews, setProductReviews] = useState([]);
 
+    const [isInStash, setIsInStash] = useState(false);
+    const [stashButtonText, setStashButtonText] = useState("Add to Stash");
+    const [checkingStash, setCheckingStash] = useState(true); // New state
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -23,12 +26,43 @@ export default function ProductPage ({ params }) {
             }
 
             const data = await response.json();
-            setProduct(data); //store in state so react can render it
-            setLoading(false); //tell when done loading
-    };
+            setProduct(data);
+            setLoading(false);
+        };
 
-    fetchProduct();
+        fetchProduct();
     }, []);
+
+    // NEW: Check if product is already in stash
+    useEffect(() => {
+        if (!product) return;
+
+        const checkIfInStash = async () => {
+            try {
+                const response = await fetch('/api/stash');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const stashItems = data.stash || [];
+                
+                // Check if this product is in the stash
+                const inStash = stashItems.some(
+                    item => item.product_id === product.id
+                );
+
+                if (inStash) {
+                    setIsInStash(true);
+                    setStashButtonText("In Stash");
+                }
+            } catch (error) {
+                console.error('Error checking stash:', error);
+            } finally {
+                setCheckingStash(false);
+            }
+        };
+
+        checkIfInStash();
+    }, [product]);
 
     useEffect(() => {
         if (!product) return;
@@ -40,53 +74,86 @@ export default function ProductPage ({ params }) {
         fetchReviews();
     }, [product]);
 
+    const handleAddToStash = async () => {
+        if (!product) return;
+
+        try {
+            const response = await fetch('/api/stash', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: product.id,
+                    status: 'unopened'
+                }),
+            });
+
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                console.error('Server error:', responseData.error);
+                throw new Error(responseData.error || 'Server returned error');
+            }
+
+            // Success path
+            setIsInStash(true);
+            setStashButtonText("Added to Stash");
+
+            // Reset after 2 seconds
+            setTimeout(() => {
+                setStashButtonText("In Stash");
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error adding to stash:', error);
+            setStashButtonText("Error - Try Again");
+            
+            // Reset error state after 3 seconds
+            setTimeout(() => {
+                setStashButtonText("Add to Stash");
+            }, 3000);
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error loading product.</div>;
     if (!product) return <div>Product not found.</div>;
 
+    return (
+        <div>
+            <Navbar />
+            <div className="page-wrapper">
+                <div className="product-container">
+                    <div className="backlink">
+                        <Link href="/" className="breadcrumb-catalog">
+                            ← Back to Catalog
+                        </Link>
+                    </div>
 
-    //render the product details
-
-return (
-    <div>
-        <nav className="topnav"> 
-            <div className="nav-wrapper">
-                <Link href={`/`} className="nav-logo">MatchaLog</Link>
-            <ul>
-                <li><Link href={`/`} className="nav-link">Discover</Link></li>
-                <li><Link href={`/stash/${user_id}`} className="nav-linkStash">Stash</Link></li>
-                <li><Link href={`/recipes`} className="nav-linkRecipes">Recipes</Link></li>
-                <li><Link href={`/profile/${user_id}`} className="nav-linkProfile">Profile</Link></li>
-            </ul>
-            </div>
-        </nav>
-
-    <div className="page-wrapper">
-        <div className="product-container">
-        <div className="backlink">
-            <Link href="/" className="breadcrumb-catalog">← Back to Catalog
-            </Link>
-        </div>
-            
-
-        <div className="product-page">
-            {/*product image*/}
-            <div key={product.id} className="product-card">
-              <div className="product-card-image-container">
-                <img src={product.image_url || '/image.svg'} alt={product.name} />
-              </div>
-            </div>
-            {/*product details*/}
-            <div className="product-details">
-                <div className="product-brand">{product.brand}</div>
-                <h1>{product.name}</h1>
-                <div className="product-tags"> 
-                    <span className="tag">{product.origin}</span>
-                    {/*<span className="tag">{product.grade}</span> */}
-                    <span className="tag">$ {product.price}</span>
-                </div>
-                <p className="product-description">{product.description}</p> 
-                <button className="add-to-stash">Add to Stash</button>
+                    <div className="product-page">
+                        <div key={product.id} className="product-card">
+                            <div className="product-card-image-container">
+                                <img src={product.image_url || '/image.svg'} alt={product.name} />
+                            </div>
+                        </div>
+                        
+                        <div className="product-details">
+                            <div className="product-brand">{product.brand}</div>
+                            <h1>{product.name}</h1>
+                            <div className="product-tags"> 
+                                <span className="tag">{product.origin}</span>
+                                <span className="tag">$ {product.price}</span>
+                            </div>
+                            <p className="product-description">{product.description}</p> 
+                            
+                            <button 
+                                className="add-to-stash" 
+                                onClick={handleAddToStash}
+                                disabled={isInStash || checkingStash}
+                            >
+                                {checkingStash ? "Checking..." : stashButtonText}
+                            </button>
             </div>
     </div>
         {/* Reviews Section */}

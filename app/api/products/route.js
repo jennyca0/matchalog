@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase.js"
 
 // fetch products from the database and return them as json
 export async function GET(request) {

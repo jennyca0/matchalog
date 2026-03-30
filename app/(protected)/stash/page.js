@@ -1,20 +1,21 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { user_id } from '@/lib/constants';
 import Link from 'next/link';
-
+import Navbar from '@/components/navbar';
 
 export default function StashPage ({ params }) {
     const [userStash, setUserStash] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [savingStatusId, setSavingStatusId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
     const [activeFilter, setActiveFilter] = useState("All");
     const filterOptions = ["All", "Unopened", "Opened", "Finished", "Wishlist", "Repurchased", "Did Not Finish"];
 
     useEffect(() => {
         const fetchUserStash = async () => {
-            const response = await fetch(`/api/stash/${user_id}`);
+            const response = await fetch(`/api/stash`);
             
             if (!response.ok) {
                 setError('Error fetching stash');
@@ -24,30 +25,88 @@ export default function StashPage ({ params }) {
 
             const data = await response.json();
             console.log(data);
-            setUserStash(data.stash); //store in state so react can render it
+            const stashItems = (data.stash || []).map((item) => ({
+                ...item,
+                status: item.status || item.status_id || 'unopened',
+            }));
+            setUserStash(stashItems); //store in state so react can render it
             setLoading(false); //tell when done loading
     };
 
     fetchUserStash();
     }, []);
 
+    const broadcastStashChange = (payload) => {
+        if (typeof window === 'undefined') return;
+        window.dispatchEvent(new CustomEvent('stash-sync', { detail: payload }));
+        localStorage.setItem('stash-sync', JSON.stringify({ ...payload, ts: Date.now() }));
+    }
 
+    const handleStatusChange = async (stashId, productId, newStatus, previousStatus) => {
+        setSavingStatusId(stashId);
+        setUserStash((prev) =>
+            prev.map((item) =>
+                item.id === stashId ? { ...item, status: newStatus, status_id: newStatus } : item
+            )
+        );
 
+        try {
+            const response = await fetch(`/api/stash/${stashId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }), // ← Use newStatus, remove product_id
+            });
+
+            if (!response.ok) {
+                throw new Error('Status update failed');
+            }
+
+            broadcastStashChange({ action: 'updated', productId });
+        } catch (error) {
+            console.error('Error updating stash status:', error);
+            setUserStash((prev) =>
+                prev.map((item) =>
+                    item.id === stashId ? { ...item, status: previousStatus, status_id: previousStatus } : item
+                )
+            );
+            setError('Unable to update status. Please try again.');
+        } finally {
+            setSavingStatusId(null);
+        }
+    }
+
+    const handleDelete = async (stashId, productId) => {
+        if (!stashId) {
+            console.error('Delete failed: missing stashId');
+            setError('Unable to delete item. Missing stash id.');
+            return;
+        }
+
+        setDeletingId(stashId);
+
+        try {
+            const response = await fetch(`/api/stash/${stashId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Delete failed');
+            }
+
+            setUserStash((prev) => prev.filter((item) => item.id !== stashId));
+            broadcastStashChange({ action: 'deleted', productId });
+        } catch (error) {
+            console.error('Error deleting stash item:', error);
+            setError(error.message || 'Unable to delete item. Please try again.');
+        } finally {
+            setDeletingId(null);
+        }
+    }
 
     return (
         <div> 
-            <nav className="topnav">
-                <div className="nav-wrapper">
-                    <Link href={`/`} className="nav-logo">MatchaLog</Link>
-                <ul>
-                    <li><Link href={`/`} className="nav-link">Discover</Link></li>
-                    <li><Link href={`/stash/${user_id}`} className="nav-linkStash">Stash</Link></li>
-                    <li><Link href={`/recipes`} className="nav-linkRecipes">Recipes</Link></li>
-                    <li><Link href={`/profile/${user_id}`} className="nav-linkProfile">Profile</Link></li>
-                </ul>
-                </div>
-            </nav>
-
+            <Navbar />
             <div className="page-wrapper">
                <div className="page-header">
                 <h2>My Stash</h2>
@@ -90,7 +149,19 @@ export default function StashPage ({ params }) {
 
                                             </div>
                                             <div className="stash-product-actions">
-                                                <select className="stash-status-select" defaultValue={product.status}>
+                                                <select
+                                                    className="stash-status-select"
+                                                    value={product.status || 'unopened'}
+                                                    disabled={savingStatusId === product.id || deletingId === product.id}
+                                                    onChange={(event) =>
+                                                        handleStatusChange(
+                                                            product.id,
+                                                            product.matcha_products?.id,
+                                                            event.target.value,
+                                                            product.status || 'unopened'
+                                                        )
+                                                    }
+                                                >
                                                     <option value="unopened">Unopened</option>
                                                     <option value="opened">Opened</option>
                                                     <option value="finished">Finished</option>
@@ -98,7 +169,13 @@ export default function StashPage ({ params }) {
                                                     <option value="repurchased">Repurchased</option>
                                                     <option value="did not finish">Did Not Finish</option>
                                                 </select>
-                                                <button className="stash-delete-btn">Delete</button>
+                                                <button
+                                                    className="stash-delete-btn"
+                                                    disabled={deletingId === product.id}
+                                                    onClick={() => handleDelete(product.id, product.matcha_products?.id)}
+                                                >
+                                                    {deletingId === product.id ? 'Deleting...' : 'Delete'}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
