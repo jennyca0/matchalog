@@ -1,7 +1,6 @@
 "use client";
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { user_id } from '@/lib/constants';
 
 export default function recipesPage () {
     const [recipe, setRecipe] = useState(null);
