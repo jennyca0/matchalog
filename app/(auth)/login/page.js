@@ -16,7 +16,7 @@ function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      window.location.href = '/'
+      router.push('/')
     }
   };
 
