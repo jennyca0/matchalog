@@ -1,16 +1,17 @@
-"use client";
-import { useEffect, useMemo, useState } from 'react';
+'use client';
+
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { debounce } from 'lodash';
 import Link from 'next/link';
+import ReactPaginate from 'react-paginate';
 import { user_id } from '@/lib/constants';
-import ReactPaginate from "react-paginate";
+import type { MatchaProduct, ProductsResponse } from '@/lib/types';
 
 export default function Home() {
-  const [data, setData] = useState([]);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState<MatchaProduct[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [pageCount, setPageCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
@@ -18,56 +19,56 @@ export default function Home() {
 
   const debouncedSearch = useMemo(
     () =>
-      debounce((text) => {
+      debounce((text: string) => {
         setCurrentPage(0);
         setSearchText(text);
       }, 300),
-    []
+    [],
   );
 
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
+  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
 
   useEffect(() => {
     const fetchData = async () => {
       setError(null);
       setLoading(true);
 
-      const response = await fetch(
-        `/api/products?search=${encodeURIComponent(searchText)}&page=${currentPage}&pageSize=${itemsPerPage}`
-      );
-      if (!response.ok) {
-        setError('Error fetching products');
-        setLoading(false);
-        return;
-      }
+      try {
+        const response = await fetch(
+          `/api/products?search=${encodeURIComponent(searchText)}&page=${currentPage}&pageSize=${itemsPerPage}`,
+        );
+        if (!response.ok) {
+          setError('Error fetching products');
+          return;
+        }
 
-      const data = await response.json();
-      setData(data?.products ?? []);
-      setTotalCount(data?.count ?? 0);
-      setPageCount(Math.ceil((data?.count ?? 0) / itemsPerPage));
-      setLoading(false);
+        const result = (await response.json()) as ProductsResponse;
+        setData(result.products ?? []);
+        setTotalCount(result.count ?? 0);
+        setPageCount(Math.ceil((result.count ?? 0) / itemsPerPage));
+      } catch {
+        setError('Error fetching products');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
-  }, [searchText, currentPage, itemsPerPage]);
+    void fetchData();
+  }, [searchText, currentPage]);
 
-  const handlePageClick = (selected) => {
-    setCurrentPage(selected.selected);
+  const handlePageClick = ({ selected }: { selected: number }) => {
+    setCurrentPage(selected);
   };
 
-return (
+  return (
     <div>
       <nav className="topnav">
         <div className="nav-wrapper">
-            <Link href={`/`} className="nav-logo">MatchaLog</Link>
+          <Link href="/" className="nav-logo">MatchaLog</Link>
           <ul>
-            <li><Link href={`/`} className="nav-link">Discover</Link></li>
+            <li><Link href="/" className="nav-link">Discover</Link></li>
             <li><Link href={`/stash/${user_id}`} className="nav-linkStash">Stash</Link></li>
-            <li><Link href={`/recipes`} className="nav-linkRecipes">Recipes</Link></li>
+            <li><Link href="/recipes" className="nav-linkRecipes">Recipes</Link></li>
             <li><Link href={`/profile/${user_id}`} className="nav-linkProfile">Profile</Link></li>
           </ul>
         </div>
@@ -79,21 +80,18 @@ return (
           <p className="page-description">Find matcha products</p>
         </div>
         <div className="search-bar">
-          <input 
-          type="text" 
-          id="search-input" 
-          placeholder="Search for matcha products..."
-          onChange={(e) => debouncedSearch(e.target.value)}
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search for matcha products..."
+            onChange={(event: ChangeEvent<HTMLInputElement>) => debouncedSearch(event.target.value)}
           />
         </div>
 
         <div className="container">
           {loading && <p className="info">Loading products…</p>}
           {error && <p className="error">{error}</p>}
-          {!loading && !error && data.length === 0 && (
-            <p className="info">No products found.</p>
-          )}
-
+          {!loading && !error && data.length === 0 && <p className="info">No products found.</p>}
           {!loading && !error && data.map((product) => (
             <Link key={product.id} href={`/products/${product.id}`} className="product-link">
               <div className="card">
@@ -125,11 +123,9 @@ return (
           />
         )}
         {!loading && !error && totalCount > 0 && (
-          <p className="info"> Showing {data.length} of {totalCount} products</p>
+          <p className="info">Showing {data.length} of {totalCount} products</p>
         )}
       </div>
     </div>
   );
 }
-
- 
