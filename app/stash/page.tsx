@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AuthNav } from '@/components/auth-nav';
+import { SiteHeader } from '@/components/site-header';
 import type { StashItem, StashResponse } from '@/lib/types';
 
 export default function StashPage() {
@@ -31,39 +31,47 @@ export default function StashPage() {
   }, []);
 
   return (
-    <div>
-      <nav className="topnav">
-        <div className="nav-wrapper">
-          <Link href="/" className="nav-logo">MatchaLog</Link>
-          <ul>
-            <li><Link href="/" className="nav-link">Discover</Link></li>
-            <li><Link href="/stash" className="nav-linkStash">Stash</Link></li>
-            <li><Link href="/recipes" className="nav-linkRecipes">Recipes</Link></li>
-            <li><Link href="/profile" className="nav-linkProfile">Profile</Link></li>
-          </ul>
-          <AuthNav />
-        </div>
-      </nav>
+    <>
+      <SiteHeader />
+      <main className="page-shell">
+        <header className="page-intro">
+          <div className="page-intro__copy">
+            <p className="eyebrow">Your personal shelf</p>
+            <h1>Keep the cups worth remembering.</h1>
+            <p className="page-intro__description">
+              A small record of what is open, what is finished, and what you want to return to.
+            </p>
+          </div>
+          <p className="page-intro__aside">
+            <strong>{userStash.length || '—'}</strong>
+            {userStash.length === 1 ? 'matcha in your stash' : 'matcha in your stash'}
+          </p>
+        </header>
 
-      <div className="page-wrapper">
-        <div className="page-header">
-          <h2>My Stash</h2>
-          <p className="page-description">Your Matcha Products</p>
-        </div>
-        <div className="stash-container">
-          {loading ? (
-            <div className="loading-state"><p>Loading your stash...</p></div>
-          ) : error ? (
-            <div className="error"><p>{error}</p></div>
-          ) : userStash.length === 0 ? (
-            <div className="empty-stash">
-              <p>No products in your stash yet!</p>
-              <p>Start adding matcha products to keep track of your collection</p>
-              <Link href="/"><button type="button" className="discover-button">Discover Matcha</button></Link>
-            </div>
-          ) : (
-            <div className="stash-main">
-              <div className="stash-products">
+        <div className="stash-layout">
+          <section className="stash-list" aria-live="polite">
+            {loading ? (
+              <p className="state-message">Opening your shelf…</p>
+            ) : error ? (
+              <p className="state-message state-message--error">{error}</p>
+            ) : userStash.length === 0 ? (
+              <div className="empty-stash">
+                <div className="empty-stash__visual" aria-hidden="true">
+                  <svg viewBox="0 0 160 120" role="presentation">
+                    <path d="M63 19c-7 9-7 17 0 24M86 14c-7 10-7 18 0 26M109 19c-7 9-7 17 0 24" />
+                    <path d="M36 57h88c-2 25-18 39-44 39S38 82 36 57Z" />
+                    <path d="M30 56c3 7 12 11 22 11h56c10 0 19-4 22-11" />
+                    <path d="M55 99h50" />
+                    <circle cx="80" cy="52" r="4" />
+                  </svg>
+                </div>
+                <p className="eyebrow">The first entry</p>
+                <h2>Nothing here yet.</h2>
+                <p>Start with one matcha you are curious about. Your shelf will grow from there.</p>
+                <Link href="/" className="button button--primary">Discover matcha</Link>
+              </div>
+            ) : (
+              <>
                 {userStash.map((product) => (
                   <div key={product.id} className="stash-product-card">
                     <div className="stash-product-image">
@@ -96,11 +104,16 @@ export default function StashPage() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </section>
+          <aside className="stash-aside">
+            <p className="eyebrow">A gentle practice</p>
+            <h2>Notice what you reach for.</h2>
+            <p>Use status and ratings as a memory aid, not a scorecard.</p>
+          </aside>
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

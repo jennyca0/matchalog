@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { debounce } from 'lodash';
-import Link from 'next/link';
 import ReactPaginate from 'react-paginate';
-import { AuthNav } from '@/components/auth-nav';
+import { ProductCard } from '@/components/product-card';
+import { SiteHeader } from '@/components/site-header';
 import type { MatchaProduct, ProductsResponse } from '@/lib/types';
 
 export default function Home() {
@@ -61,72 +61,69 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <nav className="topnav">
-        <div className="nav-wrapper">
-          <Link href="/" className="nav-logo">MatchaLog</Link>
-          <ul>
-            <li><Link href="/" className="nav-link">Discover</Link></li>
-            <li><Link href="/stash" className="nav-linkStash">Stash</Link></li>
-            <li><Link href="/recipes" className="nav-linkRecipes">Recipes</Link></li>
-            <li><Link href="/profile" className="nav-linkProfile">Profile</Link></li>
-          </ul>
-          <AuthNav />
-        </div>
-      </nav>
+    <>
+      <SiteHeader />
+      <main className="page-shell">
+        <header className="page-intro">
+          <div className="page-intro__copy">
+            <p className="eyebrow">A quiet record of good things</p>
+            <h1>Find your next daily matcha.</h1>
+            <p className="page-intro__description">
+              Browse the collection, notice what you like, and keep the ones worth returning to close at hand.
+            </p>
+          </div>
+          <p className="page-intro__aside">
+            <strong>{totalCount || '—'}</strong>
+            products in the collection
+          </p>
+        </header>
 
-      <div className="page-wrapper">
-        <div className="page-header">
-          <h2>Discover</h2>
-          <p className="page-description">Find matcha products</p>
-        </div>
-        <div className="search-bar">
+        <div className="catalog-toolbar">
+          <div className="search-field">
+            <label htmlFor="search-input">Search the collection</label>
           <input
             type="text"
             id="search-input"
-            placeholder="Search for matcha products..."
+            placeholder="Try a name, maker, or place"
             onChange={(event: ChangeEvent<HTMLInputElement>) => debouncedSearch(event.target.value)}
           />
+          </div>
+          <p className="catalog-count">{loading ? 'Refreshing…' : 'Sorted by newest'}</p>
         </div>
 
-        <div className="container">
-          {loading && <p className="info">Loading products…</p>}
-          {error && <p className="error">{error}</p>}
-          {!loading && !error && data.length === 0 && <p className="info">No products found.</p>}
-          {!loading && !error && data.map((product) => (
-            <Link key={product.id} href={`/products/${product.id}`} className="product-link">
-              <div className="card">
-                <div className="card-image-container">
-                  <img src={product.image_url || '/image.svg'} alt={product.name} />
-                </div>
-                <div className="card-text">
-                  <h3 className="card-title">{product.name}</h3>
-                  <p className="card-brand">{product.brand}</p>
-                  <p className="card-origin">{product.origin}</p>
-                </div>
-              </div>
-            </Link>
+        <section className="product-grid" aria-live="polite">
+          {loading && <p className="state-message">Looking through the collection…</p>}
+          {error && <p className="state-message state-message--error">{error}</p>}
+          {!loading && !error && data.length === 0 && <p className="state-message">No products found. Try a broader search.</p>}
+          {!loading && !error && data.map((product, index) => (
+            <ProductCard key={product.id} product={product} index={index} />
           ))}
-        </div>
+        </section>
 
         {pageCount > 1 && (
-          <ReactPaginate
-            pageCount={pageCount}
-            forcePage={currentPage}
-            onPageChange={handlePageClick}
-            marginPagesDisplayed={1}
-            pageRangeDisplayed={3}
-            containerClassName="paginate"
-            activeClassName="paginate-active"
-            previousLabel="←"
-            nextLabel="→"
-            breakLabel="…"
-          />
+          <div className="pagination-wrap">
+            <ReactPaginate
+              pageCount={pageCount}
+              forcePage={currentPage}
+              onPageChange={handlePageClick}
+              marginPagesDisplayed={1}
+              pageRangeDisplayed={3}
+              containerClassName="paginate"
+              activeClassName="paginate-active"
+              previousLabel="←"
+              nextLabel="→"
+              breakLabel="…"
+            />
+            {!loading && !error && totalCount > 0 && (
+              <p className="page-note">Showing {data.length} of {totalCount} products</p>
+            )}
+          </div>
         )}
-        {!loading && !error && totalCount > 0 && (
-          <p className="info">Showing {data.length} of {totalCount} products</p>
+
+        {pageCount <= 1 && !loading && !error && totalCount > 0 && (
+          <p className="page-note page-note--spaced">Showing {data.length} of {totalCount} products</p>
         )}
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

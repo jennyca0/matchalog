@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'MatchaLog',
-  description: 'Track your collection',
+  description: 'A quiet place to keep a record of the matcha you love.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
-import { AuthNav } from '@/components/auth-nav';
+import { SiteHeader } from '@/components/site-header';
 import type { Recipe } from '@/lib/types';
 
 interface RecipesResponse {
@@ -38,44 +38,42 @@ export default function RecipesPage() {
   }, []);
 
   return (
-    <div>
-      <nav className="topnav">
-        <div className="nav-wrapper">
-          <Link href="/" className="nav-logo">MatchaLog</Link>
-          <ul>
-            <li><Link href="/" className="nav-link">Discover</Link></li>
-            <li><Link href="/stash" className="nav-linkStash">Stash</Link></li>
-            <li><Link href="/recipes" className="nav-linkRecipes">Recipes</Link></li>
-            <li><Link href="/profile" className="nav-linkProfile">Profile</Link></li>
-          </ul>
-          <AuthNav />
-        </div>
-      </nav>
+    <>
+      <SiteHeader />
+      <main className="page-shell">
+        <header className="page-intro">
+          <div className="page-intro__copy">
+            <p className="eyebrow">A small library for slow mornings</p>
+            <h1>Recipes worth repeating.</h1>
+            <p className="page-intro__description">
+              Keep the preparations that make your daily cup feel like your own.
+            </p>
+          </div>
+          <p className="page-intro__aside">
+            <strong>{data.length || '—'}</strong>
+            saved preparations
+          </p>
+        </header>
 
-      <div className="page-wrapper">
-        <div className="page-header">
-          <h2>Recipes</h2>
-          <p className="page-description">Explore and create Matcha Recipes</p>
-        </div>
-        <div className="container">
-          {loading && <p className="info">Loading recipes…</p>}
-          {error && <p className="error">{error}</p>}
-          {!loading && !error && data.length === 0 && <p className="info">No recipes found.</p>}
-          {!loading && !error && data.map((recipe) => (
-            <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="recipe-link">
-              <div className="card">
-                <div className="card-image-container">
+        <section className="recipe-grid" aria-live="polite">
+          {loading && <p className="state-message">Opening the recipe shelf…</p>}
+          {error && <p className="state-message state-message--error">{error}</p>}
+          {!loading && !error && data.length === 0 && <p className="state-message">No recipes found yet.</p>}
+          {!loading && !error && data.map((recipe, index) => (
+            <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="recipe-card" style={{ '--card-index': index } as CSSProperties}>
+              <article>
+                <div className="recipe-card__image">
                   <img src={recipe.image_url || '/image.svg'} alt={recipe.name} />
                 </div>
-                <div className="card-text">
-                  <h3 className="card-title">{recipe.name}</h3>
-                  <p className="card-brand">{recipe.creator}</p>
+                <div className="recipe-card__body">
+                  <p className="recipe-card__creator">{recipe.creator || 'MatchaLog kitchen'}</p>
+                  <h3>{recipe.name}</h3>
                 </div>
-              </div>
+              </article>
             </Link>
           ))}
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 }

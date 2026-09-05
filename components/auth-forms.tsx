@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getSafeRedirectPath } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 
@@ -78,8 +81,8 @@ export function LoginForm({ redirectTo, initialError = null }: LoginFormProps) {
       <form className="auth-form" onSubmit={handleSubmit}>
         <AuthError message={error} />
         <div className="auth-field">
-          <label htmlFor="login-email">Email</label>
-          <input
+          <Label htmlFor="login-email">Email</Label>
+          <Input
             id="login-email"
             type="email"
             name="email"
@@ -90,8 +93,8 @@ export function LoginForm({ redirectTo, initialError = null }: LoginFormProps) {
           />
         </div>
         <div className="auth-field">
-          <label htmlFor="login-password">Password</label>
-          <input
+          <Label htmlFor="login-password">Password</Label>
+          <Input
             id="login-password"
             type="password"
             name="password"
@@ -101,9 +104,9 @@ export function LoginForm({ redirectTo, initialError = null }: LoginFormProps) {
             required
           />
         </div>
-        <button className="auth-submit" type="submit" disabled={isSubmitting}>
+        <Button className="auth-submit" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Signing in…' : 'Sign in'}
-        </button>
+        </Button>
         <Link href={`/forgot-password?redirect=${encodeURIComponent(safeRedirect)}`} className="auth-text-link">
           Forgot your password?
         </Link>
@@ -168,8 +171,8 @@ export function SignupForm({ redirectTo }: AuthFormProps) {
         <AuthError message={error} />
         {message && <p className="auth-success" role="status">{message}</p>}
         <div className="auth-field">
-          <label htmlFor="signup-email">Email</label>
-          <input
+          <Label htmlFor="signup-email">Email</Label>
+          <Input
             id="signup-email"
             type="email"
             name="email"
@@ -180,8 +183,8 @@ export function SignupForm({ redirectTo }: AuthFormProps) {
           />
         </div>
         <div className="auth-field">
-          <label htmlFor="signup-password">Password</label>
-          <input
+          <Label htmlFor="signup-password">Password</Label>
+          <Input
             id="signup-password"
             type="password"
             name="password"
@@ -193,8 +196,8 @@ export function SignupForm({ redirectTo }: AuthFormProps) {
           />
         </div>
         <div className="auth-field">
-          <label htmlFor="signup-confirm-password">Confirm password</label>
-          <input
+          <Label htmlFor="signup-confirm-password">Confirm password</Label>
+          <Input
             id="signup-confirm-password"
             type="password"
             name="confirm-password"
@@ -205,9 +208,9 @@ export function SignupForm({ redirectTo }: AuthFormProps) {
             required
           />
         </div>
-        <button className="auth-submit" type="submit" disabled={isSubmitting}>
+        <Button className="auth-submit" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Creating account…' : 'Create account'}
-        </button>
+        </Button>
       </form>
       <p className="auth-footer">
         Already have an account?{' '}
@@ -252,8 +255,8 @@ export function ForgotPasswordForm({ redirectTo }: AuthFormProps) {
         <AuthError message={error} />
         {message && <p className="auth-success" role="status">{message}</p>}
         <div className="auth-field">
-          <label htmlFor="reset-email">Email</label>
-          <input
+          <Label htmlFor="reset-email">Email</Label>
+          <Input
             id="reset-email"
             type="email"
             name="email"
@@ -263,9 +266,9 @@ export function ForgotPasswordForm({ redirectTo }: AuthFormProps) {
             required
           />
         </div>
-        <button className="auth-submit" type="submit" disabled={isSubmitting}>
+        <Button className="auth-submit" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Sending…' : 'Send reset link'}
-        </button>
+        </Button>
       </form>
       <p className="auth-footer"><Link href="/login">Back to sign in</Link></p>
     </AuthCard>
@@ -307,9 +310,9 @@ export function UpdatePasswordForm({ redirectTo }: AuthFormProps) {
   if (isUpdated) {
     return (
       <AuthCard title="Password updated" description="Your new password is ready to use.">
-        <button className="auth-submit" type="button" onClick={() => router.replace(safeRedirect)}>
+        <Button className="auth-submit" type="button" onClick={() => router.replace(safeRedirect)}>
           Continue
-        </button>
+        </Button>
       </AuthCard>
     );
   }
@@ -319,8 +322,8 @@ export function UpdatePasswordForm({ redirectTo }: AuthFormProps) {
       <form className="auth-form" onSubmit={handleSubmit}>
         <AuthError message={error} />
         <div className="auth-field">
-          <label htmlFor="update-password">New password</label>
-          <input
+          <Label htmlFor="update-password">New password</Label>
+          <Input
             id="update-password"
             type="password"
             name="password"
@@ -332,8 +335,8 @@ export function UpdatePasswordForm({ redirectTo }: AuthFormProps) {
           />
         </div>
         <div className="auth-field">
-          <label htmlFor="update-confirm-password">Confirm new password</label>
-          <input
+          <Label htmlFor="update-confirm-password">Confirm new password</Label>
+          <Input
             id="update-confirm-password"
             type="password"
             name="confirm-password"
@@ -344,9 +347,9 @@ export function UpdatePasswordForm({ redirectTo }: AuthFormProps) {
             required
           />
         </div>
-        <button className="auth-submit" type="submit" disabled={isSubmitting}>
+        <Button className="auth-submit" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Updating…' : 'Update password'}
-        </button>
+        </Button>
       </form>
     </AuthCard>
   );

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { AuthNav } from '@/components/auth-nav';
+import { SiteHeader } from '@/components/site-header';
 import type { Recipe } from '@/lib/types';
 
 interface RecipePageProps {
@@ -35,45 +35,27 @@ export default function RecipePage({ params }: RecipePageProps) {
     void fetchRecipe();
   }, [params]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error loading recipe.</div>;
-  if (!recipe) return <div>Recipe not found.</div>;
+  if (loading) return <><SiteHeader /><main className="page-shell"><p className="state-message">Opening the recipe…</p></main></>;
+  if (error) return <><SiteHeader /><main className="page-shell"><p className="state-message state-message--error">Error loading recipe.</p></main></>;
+  if (!recipe) return <><SiteHeader /><main className="page-shell"><p className="state-message">Recipe not found.</p></main></>;
 
   return (
-    <div>
-      <nav className="topnav">
-        <div className="nav-wrapper">
-          <Link href="/" className="nav-logo">MatchaLog</Link>
-          <ul>
-            <li><Link href="/" className="nav-link">Discover</Link></li>
-            <li><Link href="/stash" className="nav-linkStash">Stash</Link></li>
-            <li><Link href="/recipes" className="nav-linkRecipes">Recipes</Link></li>
-            <li><Link href="/profile" className="nav-linkProfile">Profile</Link></li>
-          </ul>
-          <AuthNav />
-        </div>
-      </nav>
-
-      <div className="page-wrapper">
-        <div className="product-container">
-          <div className="backlink">
-            <Link href="/recipes" className="breadcrumb-recipes">← Back to Recipes</Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="recipe-page">
-        <div key={recipe.id} className="recipe-card">
-          <div className="recipe-card-image-container">
+    <>
+      <SiteHeader />
+      <main className="page-shell">
+        <Link href="/recipes" className="back-link">← Back to recipes</Link>
+        <article className="detail-layout recipe-detail">
+          <div className="detail-visual">
             <img src={recipe.image_url || '/image.svg'} alt={recipe.name} />
           </div>
-        </div>
-        <div className="recipe-details">
-          <div className="recipe-creator">{recipe.creator}</div>
-          <h1>{recipe.name}</h1>
-          <p className="recipe-description">{recipe.description}</p>
-        </div>
-      </div>
-    </div>
+          <div className="detail-panel">
+            <p className="recipe-detail__creator">{recipe.creator || 'MatchaLog kitchen'}</p>
+            <h1>{recipe.name}</h1>
+            <p className="recipe-detail__description">{recipe.description || 'A simple preparation for a thoughtful cup.'}</p>
+            <Link href="/recipes" className="button button--secondary">Browse all recipes</Link>
+          </div>
+        </article>
+      </main>
+    </>
   );
 }
