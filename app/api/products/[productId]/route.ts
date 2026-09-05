@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { ErrorResponse, MatchaProduct, RouteContext } from '@/lib/types';
+import type { ErrorResponse, MatchaProduct, ProductImage, RouteContext } from '@/lib/types';
 
 export async function GET(
   _request: Request,
@@ -8,7 +8,7 @@ export async function GET(
   const { productId } = await params;
   const { data, error } = await supabase
     .from('matcha_products')
-    .select('*')
+    .select('*, matcha_product_images(*)')
     .eq('id', productId)
     .single();
 
@@ -17,5 +17,13 @@ export async function GET(
     return Response.json(body, { status: 500 });
   }
 
-  return Response.json(data as MatchaProduct);
+  const productWithImages = data as MatchaProduct & {
+    matcha_product_images?: ProductImage[];
+  };
+  const { matcha_product_images: images, ...product } = productWithImages;
+
+  return Response.json({
+    ...product,
+    images: images ?? [],
+  } satisfies MatchaProduct);
 }

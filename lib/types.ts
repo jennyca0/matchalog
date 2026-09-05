@@ -1,3 +1,13 @@
+export interface ProductImage {
+  id: string;
+  product_id: string;
+  image_url: string;
+  alt_text: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  created_at?: string;
+}
+
 export interface MatchaProduct {
   id: string;
   name: string;
@@ -6,6 +16,7 @@ export interface MatchaProduct {
   image_url: string | null;
   price: number | string | null;
   description: string | null;
+  images?: ProductImage[];
   created_at?: string;
   [key: string]: unknown;
 }
