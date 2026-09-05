@@ -672,6 +672,15 @@ textarea {
   margin-top: 32px;
 }
 
+.stash-action-message {
+  max-width: 300px;
+  margin: 12px 0 0;
+  color: var(--color-forest);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .reviews-section {
   margin-top: 100px;
   padding-top: 28px;
@@ -877,6 +886,37 @@ textarea {
   letter-spacing: 0.11em;
 }
 
+.star-button {
+  display: inline-flex;
+  width: 22px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-line);
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.star-button:hover,
+.star-button:focus-visible,
+.star-button.filled {
+  color: var(--color-rice);
+}
+
+.star-button:hover {
+  transform: translateY(-1px);
+}
+
+.star-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .star-rating .star:not(.filled) {
   color: var(--color-line);
 }
@@ -889,6 +929,7 @@ textarea {
 }
 
 .stash-status-select {
+  width: 156px;
   padding: 7px 8px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
@@ -899,12 +940,103 @@ textarea {
 }
 
 .stash-delete-btn {
-  border: 0;
-  background: transparent;
   color: var(--color-rust);
   font-family: var(--font-mono);
   font-size: 10px;
+}
+
+.stash-product-note {
+  max-width: 500px;
+  margin: 16px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.stash-dialog-content {
+  max-width: 500px;
+  border-color: var(--color-line);
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+.stash-dialog-form {
+  display: grid;
+  gap: 18px;
+}
+
+.stash-dialog-field {
+  display: grid;
+  gap: 8px;
+}
+
+.stash-dialog-field:where(fieldset) {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.stash-dialog-field > label,
+.stash-dialog-field > legend {
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stash-dialog-field > label span,
+.stash-dialog-field > legend span {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.stash-dialog-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.stash-dialog-rating .stash-rating-choice {
+  width: 30px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-line);
   cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.stash-dialog-rating .stash-rating-choice:hover,
+.stash-dialog-rating .stash-rating-choice:focus-visible,
+.stash-dialog-rating .stash-rating-choice--active {
+  color: var(--color-rice);
+}
+
+.stash-dialog-rating .stash-rating-choice:hover {
+  transform: translateY(-1px);
+}
+
+.stash-rating-clear {
+  margin-left: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.stash-dialog-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--color-rust);
+  background: #f4e6e0;
+  color: #7d514b;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .empty-stash {

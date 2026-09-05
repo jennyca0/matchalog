@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { AddToStashDialog } from '@/components/add-to-stash-dialog';
 import { SiteHeader } from '@/components/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [productReviews, setProductReviews] = useState<Review[]>([]);
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
+  const [showStashDialog, setShowStashDialog] = useState(false);
+  const [stashMessage, setStashMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -114,9 +117,27 @@ export default function ProductPage({ params }: ProductPageProps) {
               {product.price !== null && product.price !== undefined && <Badge variant="outline">$ {product.price}</Badge>}
             </div>
             <p className="detail-description">{product.description || 'A matcha waiting to be noticed.'}</p>
-            <Button className="detail-panel__cta" type="button">Add to stash</Button>
+            <Button
+              className="detail-panel__cta"
+              type="button"
+              onClick={() => {
+                setStashMessage(null);
+                setShowStashDialog(true);
+              }}
+            >
+              Add to stash
+            </Button>
+            {stashMessage && <p className="stash-action-message" role="status">{stashMessage}</p>}
           </div>
         </article>
+
+        <AddToStashDialog
+          open={showStashDialog}
+          productId={product.id}
+          productName={product.name}
+          onOpenChange={setShowStashDialog}
+          onCreated={() => setStashMessage('Added to your stash. A quiet little record begins here.')}
+        />
 
         <section className="reviews-section" aria-labelledby="reviews-title">
           <div className="reviews-header">

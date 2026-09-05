@@ -30,11 +30,21 @@ export interface Review {
   [key: string]: unknown;
 }
 
+export interface ProductStatus {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 export interface StashItem {
   id: string;
   user_id: string;
+  product_id: string;
+  status_id: string | null;
+  notes: string | null;
   status: string | null;
   rating: number | null;
+  product_status: ProductStatus | null;
   matcha_products: MatchaProduct | null;
   [key: string]: unknown;
 }
@@ -59,6 +69,10 @@ export interface ReviewsResponse {
 
 export interface StashResponse {
   stash: StashItem[];
+}
+
+export interface StashMutationResponse {
+  stash: StashItem;
 }
 
 export interface ErrorResponse {

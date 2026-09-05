@@ -3,12 +3,49 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { SiteHeader } from '@/components/site-header';
-import type { StashItem, StashResponse } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { STASH_STATUS_NAMES, type StashStatusName } from '@/lib/stash-validation';
+import type { StashItem, StashMutationResponse, StashResponse } from '@/lib/types';
+
+const STATUS_LABELS: Record<StashStatusName, string> = {
+  unopened: 'Unopened',
+  opened: 'Opened',
+  finished: 'Finished',
+  wishlist: 'Wishlist',
+  repurchased: 'Repurchased',
+  'did not finish': 'Did not finish',
+};
+
+type StashUpdate = {
+  status?: StashStatusName | null;
+  rating?: number | null;
+};
 
 export default function StashPage() {
   const [userStash, setUserStash] = useState<StashItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StashItem | null>(null);
 
   useEffect(() => {
     const fetchUserStash = async () => {
@@ -30,6 +67,67 @@ export default function StashPage() {
     void fetchUserStash();
   }, []);
 
+  async function updateStashItem(stashId: string, update: StashUpdate) {
+    const previousStash = userStash;
+    setActionError(null);
+    setSavingId(stashId);
+    setUserStash((current) => current.map((item) => item.id === stashId ? { ...item, ...update } : item));
+
+    try {
+      const response = await fetch(`/api/stash/${stashId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      const data = (await response.json().catch(() => ({}))) as Partial<StashMutationResponse> & { error?: string };
+
+      if (response.status === 401) {
+        window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+
+      if (!response.ok || !data.stash) {
+        throw new Error(data.error || 'That change could not be saved.');
+      }
+
+      setUserStash((current) => current.map((item) => item.id === stashId ? data.stash! : item));
+    } catch (updateError) {
+      setUserStash(previousStash);
+      setActionError(updateError instanceof Error ? updateError.message : 'That change could not be saved.');
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function deleteStashItem() {
+    if (!deleteTarget) return;
+
+    const target = deleteTarget;
+    setActionError(null);
+    setDeletingId(target.id);
+
+    try {
+      const response = await fetch(`/api/stash/${target.id}`, { method: 'DELETE' });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (response.status === 401) {
+        window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || 'That item could not be deleted.');
+      }
+
+      setUserStash((current) => current.filter((item) => item.id !== target.id));
+      setDeleteTarget(null);
+    } catch (deleteError) {
+      setActionError(deleteError instanceof Error ? deleteError.message : 'That item could not be deleted.');
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <>
       <SiteHeader />
@@ -44,7 +142,7 @@ export default function StashPage() {
           </div>
           <p className="page-intro__aside">
             <strong>{userStash.length || '—'}</strong>
-            {userStash.length === 1 ? 'matcha in your stash' : 'matcha in your stash'}
+            matcha in your stash
           </p>
         </header>
 
@@ -72,38 +170,71 @@ export default function StashPage() {
               </div>
             ) : (
               <>
-                {userStash.map((product) => (
-                  <div key={product.id} className="stash-product-card">
-                    <div className="stash-product-image">
-                      <img src={product.matcha_products?.image_url || '/image.svg'} alt={product.matcha_products?.name ?? 'Matcha product'} />
-                    </div>
-                    <div className="stash-product-details">
-                      <div className="stash-product-info">
-                        <p className="stash-product-brand">{product.matcha_products?.brand}</p>
-                        <h3 className="stash-product-name">{product.matcha_products?.name}</h3>
-                        <div className="stash-item-rating">
-                          <p className="stash-rating">Your Rating</p>
-                          <div className="star-rating">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span key={star} className={star <= (product.rating || 0) ? 'star filled' : 'star'}>★</span>
-                            ))}
+                {actionError && <p className="state-message state-message--error" role="alert">{actionError}</p>}
+                {userStash.map((item) => {
+                  const product = item.matcha_products;
+                  const currentStatus = (item.status ?? 'unopened') as StashStatusName;
+                  const isSaving = savingId === item.id;
+
+                  return (
+                    <div key={item.id} className="stash-product-card">
+                      <div className="stash-product-image">
+                        <img src={product?.image_url || '/image.svg'} alt={product?.name ?? 'Matcha product'} />
+                      </div>
+                      <div className="stash-product-details">
+                        <div className="stash-product-info">
+                          <p className="stash-product-brand">{product?.brand || 'Independent maker'}</p>
+                          <h3 className="stash-product-name">{product?.name || 'Untitled matcha'}</h3>
+                          <div className="stash-item-rating">
+                            <p className="stash-rating">Your rating</p>
+                            <div className="star-rating" aria-label={`Your rating: ${item.rating ?? 'not rated'} out of 5`}>
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  className={star <= (item.rating || 0) ? 'star star-button filled' : 'star star-button'}
+                                  aria-label={`Rate ${star} out of 5`}
+                                  aria-pressed={item.rating === star}
+                                  disabled={isSaving}
+                                  onClick={() => void updateStashItem(item.id, { rating: star })}
+                                >
+                                  ★
+                                </button>
+                              ))}
+                            </div>
                           </div>
+                          {item.notes && <p className="stash-product-note">“{item.notes}”</p>}
+                        </div>
+                        <div className="stash-product-actions">
+                          <Select
+                            value={currentStatus}
+                            onValueChange={(status) => void updateStashItem(item.id, { status: status as StashStatusName })}
+                            disabled={isSaving}
+                          >
+                            <SelectTrigger className="stash-status-select" aria-label={`Status for ${product?.name || 'matcha'}`}>
+                              <SelectValue>{STATUS_LABELS[currentStatus]}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STASH_STATUS_NAMES.map((statusName) => (
+                                <SelectItem key={statusName} value={statusName}>{STATUS_LABELS[statusName]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="stash-delete-btn"
+                            onClick={() => setDeleteTarget(item)}
+                            disabled={deletingId === item.id || isSaving}
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </div>
-                      <div className="stash-product-actions">
-                        <select className="stash-status-select" defaultValue={product.status ?? ''}>
-                          <option value="unopened">Unopened</option>
-                          <option value="opened">Opened</option>
-                          <option value="finished">Finished</option>
-                          <option value="wishlist">Wishlist</option>
-                          <option value="repurchased">Repurchased</option>
-                          <option value="did not finish">Did Not Finish</option>
-                        </select>
-                        <button type="button" className="stash-delete-btn">Delete</button>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </section>
@@ -114,6 +245,30 @@ export default function StashPage() {
           </aside>
         </div>
       </main>
+
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open && !deletingId) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this matcha?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove {deleteTarget?.matcha_products?.name || 'this entry'} from your shelf. Your community notes stay untouched.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(deletingId)}>Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={Boolean(deletingId)}
+              onClick={(event) => {
+                event.preventDefault();
+                void deleteStashItem();
+              }}
+            >
+              {deletingId ? 'Removing…' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
