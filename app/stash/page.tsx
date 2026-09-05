@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { STASH_STATUS_NAMES, type StashStatusName } from '@/lib/stash-validation';
+import { getOrderedStashStatuses, getStashRatingPreview } from '@/lib/stash-ui';
 import type { StashItem, StashMutationResponse, StashResponse } from '@/lib/types';
 
 const STATUS_LABELS: Record<StashStatusName, string> = {
@@ -46,6 +47,7 @@ export default function StashPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StashItem | null>(null);
+  const [hoveredRating, setHoveredRating] = useState<{ id: string; value: number } | null>(null);
 
   useEffect(() => {
     const fetchUserStash = async () => {
@@ -175,6 +177,10 @@ export default function StashPage() {
                   const product = item.matcha_products;
                   const currentStatus = (item.status ?? 'unopened') as StashStatusName;
                   const isSaving = savingId === item.id;
+                  const previewRating = getStashRatingPreview(
+                    item.rating,
+                    hoveredRating?.id === item.id ? hoveredRating.value : null,
+                  );
 
                   return (
                     <div key={item.id} className="stash-product-card">
@@ -187,15 +193,21 @@ export default function StashPage() {
                           <h3 className="stash-product-name">{product?.name || 'Untitled matcha'}</h3>
                           <div className="stash-item-rating">
                             <p className="stash-rating">Your rating</p>
-                            <div className="star-rating" aria-label={`Your rating: ${item.rating ?? 'not rated'} out of 5`}>
+                            <div
+                              className="star-rating"
+                              aria-label={`Your rating: ${item.rating ?? 'not rated'} out of 5`}
+                              onMouseLeave={() => setHoveredRating(null)}
+                            >
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                   key={star}
                                   type="button"
-                                  className={star <= (item.rating || 0) ? 'star star-button filled' : 'star star-button'}
+                                  className={star <= previewRating ? 'star star-button filled' : 'star star-button'}
                                   aria-label={`Rate ${star} out of 5`}
                                   aria-pressed={item.rating === star}
                                   disabled={isSaving}
+                                  onMouseEnter={() => setHoveredRating({ id: item.id, value: star })}
+                                  onFocus={() => setHoveredRating({ id: item.id, value: star })}
                                   onClick={() => void updateStashItem(item.id, { rating: star })}
                                 >
                                   ★
@@ -215,7 +227,7 @@ export default function StashPage() {
                               <SelectValue>{STATUS_LABELS[currentStatus]}</SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              {STASH_STATUS_NAMES.map((statusName) => (
+                              {getOrderedStashStatuses(currentStatus, STASH_STATUS_NAMES).map((statusName) => (
                                 <SelectItem key={statusName} value={statusName}>{STATUS_LABELS[statusName]}</SelectItem>
                               ))}
                             </SelectContent>

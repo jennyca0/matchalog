@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { STASH_STATUS_NAMES } from '@/lib/stash-validation';
+import { getOrderedStashStatuses, getStashRatingPreview } from '@/lib/stash-ui';
 import type { StashItem, StashMutationResponse } from '@/lib/types';
 
 interface AddToStashDialogProps {
@@ -48,6 +49,7 @@ export function AddToStashDialog({
 }: AddToStashDialogProps) {
   const [status, setStatus] = useState<(typeof STASH_STATUS_NAMES)[number]>('unopened');
   const [rating, setRating] = useState('');
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +58,7 @@ export function AddToStashDialog({
     if (!open) {
       setStatus('unopened');
       setRating('');
+      setHoveredRating(null);
       setNotes('');
       setError(null);
       setIsSubmitting(false);
@@ -120,7 +123,7 @@ export function AddToStashDialog({
                 <SelectValue placeholder="Choose a status" />
               </SelectTrigger>
               <SelectContent>
-                {STASH_STATUS_NAMES.map((statusName) => (
+                {getOrderedStashStatuses(status, STASH_STATUS_NAMES).map((statusName) => (
                   <SelectItem key={statusName} value={statusName}>
                     {STATUS_LABELS[statusName]}
                   </SelectItem>
@@ -131,14 +134,20 @@ export function AddToStashDialog({
 
           <fieldset className="stash-dialog-field">
             <legend>Rating <span>(optional)</span></legend>
-            <div className="stash-dialog-rating" aria-label="Rating out of five">
+            <div
+              className="stash-dialog-rating"
+              aria-label="Rating out of five"
+              onMouseLeave={() => setHoveredRating(null)}
+            >
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   key={value}
                   type="button"
-                  className={`stash-rating-choice${Number(rating) >= value ? ' stash-rating-choice--active' : ''}`}
+                  className={`stash-rating-choice${getStashRatingPreview(Number(rating) || null, hoveredRating) >= value ? ' stash-rating-choice--active' : ''}`}
                   aria-label={`${value} out of 5`}
                   aria-pressed={Number(rating) === value}
+                  onMouseEnter={() => setHoveredRating(value)}
+                  onFocus={() => setHoveredRating(value)}
                   onClick={() => setRating(String(value))}
                 >
                   ★
